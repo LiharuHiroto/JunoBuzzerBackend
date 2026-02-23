@@ -1,21 +1,29 @@
 {
   "name": "junobuzzerbackend",
-  "module": "index.ts",
-  "type": "module",
-  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
   "scripts": {
-    "dev": "bun index.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "devDependencies": {
-    "@types/bun": "latest"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LiharuHiroto/JunoBuzzerBackend.git"
   },
-  "peerDependencies": {
-    "typescript": "^5"
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LiharuHiroto/JunoBuzzerBackend/issues"
   },
+  "homepage": "https://github.com/LiharuHiroto/JunoBuzzerBackend#readme",
   "dependencies": {
-    "@types/express": "^5.0.6",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "http": "^0.0.1-security",
     "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6"
   }
 }

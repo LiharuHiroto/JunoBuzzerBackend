@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
       roomCode = generateRoomCode();
     } while (rooms[roomCode]);
 
-    rooms[roomCode] = { players: [], firstBuzz: null, gameStarted: false };
+    rooms[roomCode] = { players: [], buzzOrder: [], gameStarted: false };
     socket.join(roomCode);
     io.to(socket.id).emit("room_created", { roomCode });
   });
@@ -59,32 +59,45 @@ io.on("connection", (socket) => {
 
     room.players.push({ id: socket.id, name: playerName });
     socket.join(roomCode);
-    const playerList = room.players.map((p) => p.name);
-    io.to(roomCode).emit("lobby_update", { players: playerList });
+    io.to(roomCode).emit("lobby_update", {
+      players: room.players.map((p) => p.name),
+    });
   });
 
   socket.on("start_game", ({ roomCode }) => {
     const room = rooms[roomCode];
     if (!room) return;
+
     room.gameStarted = true;
-    room.firstBuzz = null;
+    room.buzzOrder = [];
     io.to(roomCode).emit("game_started");
   });
 
-  socket.on("buzz", ({ roomCode, playerName }) => {
+  socket.on("buzz", ({ roomCode }) => {
     const room = rooms[roomCode];
     if (!room || !room.gameStarted) return;
 
-    if (!room.firstBuzz) {
-      room.firstBuzz = playerName;
-      io.to(roomCode).emit("first_buzz", { player: playerName });
-    }
+    const player = room.players.find((p) => p.id === socket.id);
+    if (!player) return;
+
+    const alreadyBuzzed = room.buzzOrder.find((p) => p.id === socket.id);
+    if (alreadyBuzzed) return;
+
+    room.buzzOrder.push({
+      id: socket.id,
+      name: player.name,
+    });
+
+    io.to(roomCode).emit("buzz_update", {
+      buzzOrder: room.buzzOrder,
+    });
   });
 
   socket.on("next_round", ({ roomCode }) => {
     const room = rooms[roomCode];
     if (!room) return;
-    room.firstBuzz = null;
+
+    room.buzzOrder = [];
     io.to(roomCode).emit("round_reset");
   });
 
@@ -94,17 +107,43 @@ io.on("connection", (socket) => {
       if (!room) continue;
 
       room.players = room.players.filter((p) => p.id !== socket.id);
-      const playerList = room.players.map((p) => p.name);
-      io.to(roomCode).emit("lobby_update", { players: playerList });
+      room.buzzOrder = room.buzzOrder.filter((p) => p.id !== socket.id);
+
+      io.to(roomCode).emit("lobby_update", {
+        players: room.players.map((p) => p.name),
+      });
+
+      io.to(roomCode).emit("buzz_update", {
+        buzzOrder: room.buzzOrder,
+      });
     }
   });
 });
 
-app.get("/", (req, res) => {
-  res.status(201).send("Hello from backend");
+app.delete("/rooms/:code", (req, res) => {
+  const { code } = req.params;
+
+  if (!rooms[code]) {
+    return res.status(404).json({ message: "Room not found" });
+  }
+
+  delete rooms[code];
+
+  res.json({ message: "Room deleted" });
 });
 
-console.log("Running");
+app.get("/rooms", (_req, res) => {
+  const roomList = Object.keys(rooms).map((code) => ({
+    code,
+    playerCount: rooms[code].players.length,
+    gameStarted: rooms[code].gameStarted,
+  }));
 
-const PORT = 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  res.json(roomList);
+});
+
+app.get("/", (req, res) => {
+  res.status(200).send("Hello from backend");
+});
+
+server.listen(5000, () => console.log("Server running on port 5000"));

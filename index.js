@@ -99,5 +99,7 @@ app.get("/", (req, res) => {
   res.status(201).send("Hello from backend");
 });
 
-const PORT = process.env.PORT || 5000;
+console.log("Running");
+
+const PORT = 5000;
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

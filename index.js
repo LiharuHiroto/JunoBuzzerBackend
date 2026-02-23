@@ -8,7 +8,12 @@ app.use(cors());
 
 const server = http.createServer(app);
 
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "https://juno-admin-dashboard.vercel.app",
+  "https://juno-buzzer.vercel.app",
+];
 
 const io = new Server(server, {
   cors: {
